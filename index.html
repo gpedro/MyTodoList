@@ -1,0 +1,53 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>Todo Angular</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+        <link rel="stylesheet" href="css/normalize.css">
+        <link rel="stylesheet" href="css/app.css">
+
+    </head>
+    <body ng-app="todoApp">
+      <section id="todoapp" ng-controller="MainCtrl" ng-init="init()">
+        <header id="header">
+          <h1>Todo</h1>
+          <input id="new-todo" placeholder="What needs to be done?" autofocus ng-model="todo" ng-keypress="add($event)">
+        </header>
+        <section id="main">
+          <ul id="todo-list">
+            <li ng-repeat="todo in todoList track by $index">
+              <div class="view" ng-class="{completed: todo.completed}">
+                <label>{{todo.name}}</label>
+                <button class="complete" ng-click="complete($index)"></button>
+                <button class="destroy" ng-click="delete($index)"></button>
+              </div>
+            </li>
+
+          </ul>
+        </section>
+        <footer id="footer" ng-hide="footerHidden">
+          <span id="todo-count">{{count}} </span>
+          <ul id="filters">
+            <li>
+                <a href="#/" class="selected">All</a>
+            </li>
+            <li>
+                <a href="#/active">Active</a>
+            </li>
+          </ul>
+          <button id="clear-completed" ng-click="clearCompleted()">Clear completed</button>
+        </footer>
+      </section>
+
+
+      <script src="bower_components/angular/angular.min.js"></script>
+      <script src="bower_components/firebase/firebase.js"></script>
+      <script src="bower_components/angularfire/dist/angularfire.min.js"></script>
+      <script src="js/app.js"></script>
+    </body>
+</html>
