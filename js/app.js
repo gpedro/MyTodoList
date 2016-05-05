@@ -1,6 +1,6 @@
 var todoApp = angular.module('todoApp', ['firebase']);
 
-todoApp.factory('Persistence', ['$firebaseArray', function($firebaseArray) {
+todoApp.factory('PersistenceFirebase', ['$firebaseArray', function($firebaseArray) {
 
   var ref = new Firebase("https://scorching-fire-9077.firebaseio.com/todo");
 
@@ -40,8 +40,141 @@ todoApp.factory('Persistence', ['$firebaseArray', function($firebaseArray) {
 
 }]);
 
+todoApp.factory('PersistenceLocal', [function() {
+  var todoList = [];
+  return {
+    getTodo: function(callback) {
+      todoList = JSON.parse(localStorage.getItem('todoLocal'));
+      todoList.map(function(obj, index) {
+        obj.id = index;
+        return obj;
+      });
+      callback(todoList);
+    },
+    add: function(todo) {
+      console.log(todo);
+      if (typeof todo.id !== 'undefined') {
+        console.log(todoList[todo.id]);
+        todoList[todo.id] = todo;
+      } else {
+        todoList.push(todo);
+      }
+      localStorage.setItem('todoLocal',  JSON.stringify(todoList));
+    },
+    remove: function(todo) {
+      todoList = todoList.filter(function(obj) {
+        return obj.id !== todo.id;
+      });
+      localStorage.setItem('todoLocal',  JSON.stringify(todoList));
+    }
+  }
+}]);
 
-todoApp.controller('MainCtrl', ['$scope', '$timeout', 'Persistence', function($scope, $timeout, Persistence) {
+todoApp.factory('PersistenceIndexed', function() {
+  window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+
+  open();
+
+  var defaultError = function(e) {
+    console.log(e);
+  };
+
+  var datastore;
+
+  function open(callback){
+    var version = 2;
+    var request = indexedDB.open('todos', version);
+    request.onupgradeneeded = function(e) {
+      var db = e.target.result;
+
+      e.target.transaction.onerror = defaultError;
+
+      if (db.objectStoreNames.contains('todo')) {
+        db.deleteObjectStore('todo');
+      }
+
+      var store = db.createObjectStore('todo', {
+        keyPath: 'id'
+      });
+    };
+
+    request.onsuccess = function(e) {
+      datastore = e.target.result;
+      if (typeof callback !== 'undefined') {
+        callback();
+      }
+    };
+    request.onerror = defaultError;
+  }
+
+  function getTransaction(callback) {
+    var db;
+    if (datastore) {
+      transObj(datastore);
+    } else {
+      open(function() {
+        transObj(datastore);
+      })
+    }
+
+    function transObj(db) {
+      var transaction = db.transaction(['todo'], 'readwrite');
+      callback(transaction);
+    }
+  }
+
+  return {
+    getTodo: function(callback) {
+      var todos = [];
+      getTransaction(function(transaction) {
+        var objStore = transaction.objectStore('todo');
+        var keyRange = IDBKeyRange.lowerBound(0);
+        var cursorRequest = objStore.openCursor(keyRange);
+        transaction.oncomplete = function(e) {
+          callback(todos);
+
+        };
+        cursorRequest.onsuccess = function(e) {
+          var result = e.target.result;
+          if (!!result == false) {
+            return;
+          }
+          todos.push(result.value);
+          result.continue();
+        }
+        cursorRequest.onerror = defaultError;
+      });
+    },
+    add: function(todo) {
+      getTransaction(function(transaction) {
+        var objStore = transaction.objectStore('todo');
+        if (!todo.id) {
+          todo.id = new Date().getTime();
+          var request = objStore.put(todo);
+          request.onsuccess = function(e) {
+            console.log('insert - ' + todo.name);
+          };
+          request.onerror = defaultError;
+        }
+      });
+    },
+    remove: function(todo) {
+      getTransaction(function(transaction) {
+        var objStore = transaction.objectStore('todo');
+        var request = objStore.delete(todo.id);
+
+        request.onsuccess = function(e) {
+          console.log('remove - ' + todo.id);
+        }
+        request.onerror = defaultError;
+      });
+
+    }
+  }
+});
+
+
+todoApp.controller('MainCtrl', ['$scope', '$timeout', 'PersistenceIndexed', function($scope, $timeout, Persistence) {
 
   $scope.footerHidden = true;
 
