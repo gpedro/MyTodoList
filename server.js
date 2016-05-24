@@ -6,12 +6,12 @@ var server = new Hapi.Server();
 
 server.connection({
 	host: 'localhost',
-  port: '8080'
+  port: '5000'
 });
 
 server.route({
   method: 'GET',
-  path: '/hello',
+  path: '/',
   handler: function(request, reply) {
     return reply('hello word!');
   }
