@@ -4,15 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "postinstall": "bower install"
   },
   "author": "Ravanhani",
   "license": "ISC",
   "dependencies": {
     "hapi": "^13.4.1",
-    "inert": "^4.0.0"
-  },
-  "devDependencies": {
+    "inert": "^4.0.0",
     "bower": "^1.7.9"
   }
 }
