@@ -4,18 +4,15 @@ var Hapi = require('hapi');
 var Inert = require('inert');
 var Path = require('path');
 
-// var server = new Hapi.Server(~~process.env.PORT || 3000, '0.0.0.0');
-
 var server = new Hapi.Server({
   connections: {
-        routes: {
-            files: {
-                relativeTo: Path.join(__dirname, 'public')
-            }
-        }
+    routes: {
+      files: {
+          relativeTo: Path.join(__dirname, 'public')
+      }
     }
   }
-);
+});
 
 server.connection({
   port: process.env.PORT || 5000
@@ -26,7 +23,6 @@ server.register(Inert, function(err) {
   if (err) {
     throw err;
   }
-
 });
 
 server.route([
@@ -35,9 +31,9 @@ server.route([
     path: '/{param*}',
     handler: {
       directory: {
-          path: '.',
-          redirectToSlash: true,
-          index: true
+        path: '.',
+        redirectToSlash: true,
+        index: true
       }
     }
   },
@@ -47,7 +43,6 @@ server.route([
     handler: {
       file: 'index.html'
     }
-
   }
 ]);
 

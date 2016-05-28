@@ -11,7 +11,7 @@ todoApp.factory('PersistenceFirebase', ['$firebaseArray', function($firebaseArra
         var list = [];
         for (var k in target){
           if (target.hasOwnProperty(k)) {
-            list.push({id: k, name: target[k].name, completed: target[k].completed});
+            list.push({id: k, name: target[k].name, active: target[k].active});
           }
         }
         callback(list);
@@ -22,12 +22,12 @@ todoApp.factory('PersistenceFirebase', ['$firebaseArray', function($firebaseArra
     add: function(todo) {
       if(todo.id){
         ref.child(todo.id).update({
-          completed: todo.completed
+          active: todo.active
         });
       } else {
         ref.push().set({
           name: todo.name,
-          completed: todo.completed
+          active: todo.active
         });
       }
     },
@@ -176,7 +176,7 @@ todoApp.factory('PersistenceIndexed', function() {
 
 todoApp.controller('MainCtrl', ['$scope', '$timeout', 'PersistenceFirebase', function($scope, $timeout, Persistence) {
 
-  $scope.footerHidden = true;
+  $scope.footerHidden = false;
 
   $scope.count;
 
@@ -192,7 +192,7 @@ todoApp.controller('MainCtrl', ['$scope', '$timeout', 'PersistenceFirebase', fun
   });
 
   $scope.complete = function(pos) {
-    $scope.todoList[pos].completed = !$scope.todoList[pos].completed;
+    $scope.todoList[pos].active = !$scope.todoList[pos].active;
     updateCount($scope.todoList);
     Persistence.add($scope.todoList[pos]);
   }
@@ -211,7 +211,7 @@ todoApp.controller('MainCtrl', ['$scope', '$timeout', 'PersistenceFirebase', fun
   $scope.add = function(e) {
     var key = e.which || e.keyCode;
     if (key === 13) {
-      var todo = {name: $scope.todo, completed: false};
+      var todo = {name: $scope.todo, active: false};
       $scope.todoList.unshift(todo);
       $scope.todo = '';
       $scope.footerHidden = false;
@@ -222,13 +222,13 @@ todoApp.controller('MainCtrl', ['$scope', '$timeout', 'PersistenceFirebase', fun
 
   $scope.clearCompleted = function() {
     $scope.todoList = $scope.todoList.filter(function(obj) {
-      return !obj.completed;
+      return !obj.active;
     });
   }
 
   var updateCount = function(list) {
     $scope.count = list.filter(function(obj) {
-      return !obj.completed;
+      return !obj.active;
     }).length;
     if ($scope.count > 1) {
       $scope.count += ' items left';
